@@ -1,7 +1,7 @@
 PubkeyAuthentication yes
 PasswordAuthentication no
 KbdInteractiveAuthentication no
-ChallengeResponseAuthentication no
+
 AuthenticationMethods publickey
 GSSAPIAuthentication yes
 GSSAPICleanupCredentials yes

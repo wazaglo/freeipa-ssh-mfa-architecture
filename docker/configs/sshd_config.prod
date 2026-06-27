@@ -1,7 +1,7 @@
 PubkeyAuthentication yes
 PasswordAuthentication no
 KbdInteractiveAuthentication yes
-ChallengeResponseAuthentication yes
+
 AuthenticationMethods publickey,keyboard-interactive
 PAMService sshd-otp
 GSSAPIAuthentication yes
