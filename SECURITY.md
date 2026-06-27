@@ -24,16 +24,16 @@ This repository contains a reference architecture for FreeIPA SSH MFA. Before de
 
 ### PAM Configuration
 
-- **Remove `nullok`** from all PAM configurations. This flag allows users with empty passwords to authenticate. Every PAM file in `configs/pam/` and the Ansible enrollment playbook contains `nullok`.
+- **Remove `nullok`** from all PAM configurations (already removed in this repository). This flag allows users with empty passwords to authenticate.
 
 ### SSSD Configuration
 
-- **Set `krb5_store_password_if_offline = false`** in all SSSD configs. When set to `true`, SSSD caches user passwords on disk for offline authentication. If a client is compromised, cached credentials can be extracted. All three SSSD config files (`sssd-dev.conf`, `sssd-uat.conf`, `sssd-prod.conf`) currently have this set to `true`.
+- **Keep `krb5_store_password_if_offline = false`** in all SSSD configs (already set in this repository). When set to `true`, SSSD caches user passwords on disk for offline authentication. If a client is compromised, cached credentials can be extracted.
 
 ### SSH Configuration
 
 - **Remove `GSSAPIAuthentication yes`** if Kerberos SSO is not required. This is enabled in all SSH configs and templates but may not be needed, expanding the attack surface unnecessarily.
-- **Remove deprecated directives.** `Protocol 2` and `ChallengeResponseAuthentication` are deprecated in modern OpenSSH. Use `KbdInteractiveAuthentication` only.
+- **Remove deprecated directives.** `ChallengeResponseAuthentication` and `Protocol 2` are deprecated in modern OpenSSH. Use `KbdInteractiveAuthentication` only. (Both have been removed from all configs in this repository; verify any custom configs you create.)
 - **Add `LoginGraceTime 30`** to all SSH configs. The default 120 seconds is overly generous for key-based auth.
 
 ### Password Expiration
@@ -50,15 +50,15 @@ The following security issues exist in the current codebase. They are documented
 | **CRITICAL** | Admin and DM passwords printed to stdout and written to `/root/` | `scripts/phase-2-install-ipa-server.sh:28-31` |
 | **CRITICAL** | Admin password visible in `/proc` via shell heredoc `kinit admin <<< "..."` | `ansible/roles/hbac/tasks/main.yml:3` |
 | **HIGH** | Real infrastructure exposed: domain, IPs, hostnames hardcoded in ~187 locations | Entire repository |
-| **HIGH** | `nullok` in PAM configs allows empty-password authentication | 8 files, 13 occurrences |
-| **HIGH** | SSSD caches passwords on disk (`krb5_store_password_if_offline = true`) | All 3 SSSD config files |
+| **HIGH** | `nullok` in PAM configs allows empty-password authentication | 6 files, 8 occurrences |
+| **HIGH** | SSSD caches passwords on disk (`krb5_store_password_if_offline = true`) | 6 SSSD config files |
 | **HIGH** | Ansible reads password from plaintext file without `no_log: true` | `ansible/playbooks/enroll-clients.yml:9` |
 | **HIGH** | `StrictHostKeyChecking=accept-new` enables MITM on first connection | `scripts/phase-9-test-auth.sh` |
 | **MEDIUM** | Passwords set to never expire (2030) | `scripts/phase-5-create-users.sh:101` |
 | **MEDIUM** | No Ansible Vault usage — all secrets in plaintext | All Ansible files |
 | **MEDIUM** | LDIF example uses unencrypted LDAP (port 389) | `configs/ipa/hbac-rules.ldif:14` |
 | **MEDIUM** | No FreeIPA password policy configured | Repository-wide |
-| **LOW** | Deprecated `ChallengeResponseAuthentication` alongside `KbdInteractiveAuthentication` | 4 SSH config files |
+| **LOW** | Deprecated `ChallengeResponseAuthentication` alongside `KbdInteractiveAuthentication` | 9 SSH config files |
 
 ## Network Security
 
