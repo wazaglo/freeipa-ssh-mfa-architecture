@@ -96,7 +96,7 @@ Create `/etc/pam.d/sshd-otp` — only used for SSH:
 # /etc/pam.d/sshd-otp
 #%PAM-1.0
 auth    [success=2 default=ignore]      pam_sss.so forward_pass
-auth    [success=1 default=ignore]      pam_unix.so nullok
+auth    [success=1 default=ignore]      pam_unix.so
 auth    requisite                       pam_deny.so
 auth    required                        pam_permit.so
 auth    optional                        pam_cap.so
@@ -114,7 +114,7 @@ PAMService sshd-otp
 
 ```bash
 # /etc/pam.d/common-auth  (standard, no OTP!)
-auth    [success=2 default=ignore]  pam_unix.so nullok
+auth    [success=2 default=ignore]  pam_unix.so
 auth    [success=1 default=ignore]  pam_sss.so use_first_pass
 auth    requisite                   pam_deny.so
 auth    required                    pam_permit.so
@@ -128,10 +128,9 @@ This way:
 ## 5. Verify PROD SSH Config
 
 ```bash
-grep -E "AuthenticationMethods|ChallengeResponse|KbdInteractive|PAMService" /etc/ssh/sshd_config
+grep -E "AuthenticationMethods|KbdInteractive|PAMService" /etc/ssh/sshd_config
 # Expected:
 #   AuthenticationMethods publickey,keyboard-interactive
-#   ChallengeResponseAuthentication yes
 #   KbdInteractiveAuthentication yes
 #   PAMService sshd-otp
 ```
