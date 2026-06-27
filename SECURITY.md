@@ -46,7 +46,6 @@ The following security issues remain in the current codebase. They are documente
 
 | Severity | Issue | Location |
 |----------|-------|----------|
-| **CRITICAL** | Admin password visible in `/proc` via shell heredoc `kinit admin <<< "..."` | `ansible/roles/hbac/tasks/main.yml:3` |
 | **HIGH** | Real infrastructure exposed: domain, IPs, hostnames hardcoded in ~200 locations | Entire repository |
 | **HIGH** | Ansible reads password from plaintext file without `no_log: true` | `ansible/playbooks/enroll-clients.yml:9` |
 | **HIGH** | `StrictHostKeyChecking=accept-new` enables MITM on first connection | `scripts/phase-9-test-auth.sh` |
@@ -54,7 +53,6 @@ The following security issues remain in the current codebase. They are documente
 | **MEDIUM** | No Ansible Vault usage — all secrets in plaintext | All Ansible files |
 | **MEDIUM** | LDIF example uses unencrypted LDAP (port 389) | `configs/ipa/hbac-rules.ldif:14` |
 | **MEDIUM** | No FreeIPA password policy configured | Repository-wide |
-| **LOW** | Deprecated `ChallengeResponseAuthentication` alongside `KbdInteractiveAuthentication` | 9 SSH config files |
 
 ### Fixed in recent commits
 
@@ -64,7 +62,8 @@ The following security issues remain in the current codebase. They are documente
 - Docker `PermitRootLogin yes` → removed
 - SSSD `krb5_store_password_if_offline = true` → set to `false` in all configs
 - `nullok` in PAM configs → removed
-- Deprecated `Protocol 2` → removed from all configs
+- Admin password visible in `/proc` via `kinit` heredoc → now uses `no_log: true` + env var
+- Deprecated `ChallengeResponseAuthentication` → removed from all configs
 
 ## Network Security
 
