@@ -26,8 +26,8 @@ services:
       IPA_SERVER_HOSTNAME: ipa.test.local
       IPA_DOMAIN: test.local
       IPA_REALM: TEST.LOCAL
-      IPA_ADMIN_PASSWORD: admin123
-      IPA_DM_PASSWORD: dm12345
+      IPA_ADMIN_PASSWORD: ${IPA_ADMIN_PASSWORD:?Set IPA_ADMIN_PASSWORD in docker/.env}
+      IPA_DM_PASSWORD: ${IPA_DM_PASSWORD:?Set IPA_DM_PASSWORD in docker/.env}
       IPA_SERVER_DNS: "yes"
       IPA_SERVER_NTP: "yes"
       IPA_SERVER_IP: 172.20.0.10

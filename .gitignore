@@ -4,6 +4,7 @@ secrets/
 *.env.*
 !.gitignore
 !secrets/*.env.example
+!docker/.env.example
 
 # Keys and certificates
 *.key
