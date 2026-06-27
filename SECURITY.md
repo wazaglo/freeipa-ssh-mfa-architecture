@@ -6,8 +6,8 @@ This repository contains a reference architecture for FreeIPA SSH MFA. Before de
 
 ### Credentials and Secrets
 
-- **Never use default passwords.** Shell scripts use hardcoded defaults (e.g., `DEFAULT_PASS="password"`). Set `IPA_ADMIN_PASSWORD` and `IPA_DM_PASSWORD` environment variables before running any script.
-- **Never commit credentials.** The `.gitignore` excludes `secrets/ipa-admin-creds.env`, but always verify before pushing.
+- **Never use default passwords.** Shell scripts require `IPA_ADMIN_PASSWORD` and `IPA_DM_PASSWORD` environment variables. Docker requires a `.env` file (copy from `docker/.env.example`). Never commit the `.env` file.
+- **Never commit credentials.** The `.gitignore` blocks `*.env`, `secrets/`, and key files, but always verify before pushing.
 - **Use Ansible Vault** for all password management in Ansible playbooks. Do not store passwords in plaintext variables or files.
 - **Rotate the IPA admin and Directory Manager passwords** immediately after initial installation.
 - **Configure a FreeIPA password policy** after installation:
@@ -42,16 +42,12 @@ This repository contains a reference architecture for FreeIPA SSH MFA. Before de
 
 ## Known Issues in This Repository
 
-The following security issues exist in the current codebase. They are documented here for transparency. Fix them before any production deployment.
+The following security issues remain in the current codebase. They are documented here for transparency.
 
 | Severity | Issue | Location |
 |----------|-------|----------|
-| **CRITICAL** | Hardcoded password `DEFAULT_PASS="password"` echoed to stdout | `scripts/phase-5-create-users.sh:37,112` |
-| **CRITICAL** | Admin and DM passwords printed to stdout and written to `/root/` | `scripts/phase-2-install-ipa-server.sh:28-31` |
 | **CRITICAL** | Admin password visible in `/proc` via shell heredoc `kinit admin <<< "..."` | `ansible/roles/hbac/tasks/main.yml:3` |
-| **HIGH** | Real infrastructure exposed: domain, IPs, hostnames hardcoded in ~187 locations | Entire repository |
-| **HIGH** | `nullok` in PAM configs allows empty-password authentication | 6 files, 8 occurrences |
-| **HIGH** | SSSD caches passwords on disk (`krb5_store_password_if_offline = true`) | 6 SSSD config files |
+| **HIGH** | Real infrastructure exposed: domain, IPs, hostnames hardcoded in ~200 locations | Entire repository |
 | **HIGH** | Ansible reads password from plaintext file without `no_log: true` | `ansible/playbooks/enroll-clients.yml:9` |
 | **HIGH** | `StrictHostKeyChecking=accept-new` enables MITM on first connection | `scripts/phase-9-test-auth.sh` |
 | **MEDIUM** | Passwords set to never expire (2030) | `scripts/phase-5-create-users.sh:101` |
@@ -59,6 +55,16 @@ The following security issues exist in the current codebase. They are documented
 | **MEDIUM** | LDIF example uses unencrypted LDAP (port 389) | `configs/ipa/hbac-rules.ldif:14` |
 | **MEDIUM** | No FreeIPA password policy configured | Repository-wide |
 | **LOW** | Deprecated `ChallengeResponseAuthentication` alongside `KbdInteractiveAuthentication` | 9 SSH config files |
+
+### Fixed in recent commits
+
+- Hardcoded `DEFAULT_PASS="password"` in scripts → now requires `IPA_DEFAULT_PASSWORD` env var
+- Admin/DM passwords echoed to stdout in `phase-2` → removed
+- Docker hardcoded `admin123`/`dm12345` → now uses `.env` file
+- Docker `PermitRootLogin yes` → removed
+- SSSD `krb5_store_password_if_offline = true` → set to `false` in all configs
+- `nullok` in PAM configs → removed
+- Deprecated `Protocol 2` → removed from all configs
 
 ## Network Security
 
