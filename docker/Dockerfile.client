@@ -27,7 +27,6 @@ COPY sssd/sssd-${env}.conf /etc/sssd/sssd.conf
 
 RUN chmod 0600 /etc/ssh/sshd_config && \
     chmod 0600 /etc/sssd/sssd.conf && \
-    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     echo "UseDNS no" >> /etc/ssh/sshd_config
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
