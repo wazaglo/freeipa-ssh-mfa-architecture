@@ -1,7 +1,16 @@
 ---
+- name: Read admin password
+  slurp:
+    src: /root/.ipa_admin_pass
+  register: admin_pass
+  no_log: true
+
 - name: Ensure admin Kerberos ticket
-  shell: kinit admin <<< "$(cat /root/.ipa_admin_pass)"
+  shell: echo "$ADMIN_PASS" | kinit admin
+  environment:
+    ADMIN_PASS: "{{ admin_pass.content | b64decode | trim }}"
   changed_when: false
+  no_log: true
 
 - name: Disable default allow_all rule
   command: ipa hbacrule-disable allow_all

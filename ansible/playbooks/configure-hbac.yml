@@ -41,10 +41,18 @@
           prod: [prd01, prd02, prd03, prd04, prd05]
 
   tasks:
+    - name: Read admin password
+      slurp:
+        src: /root/.ipa_admin_pass
+      register: admin_pass
+      no_log: true
+
     - name: Ensure admin Kerberos ticket
-      shell: |
-        kinit admin <<< "$(cat /root/.ipa_admin_pass)"
+      shell: echo "$ADMIN_PASS" | kinit admin
+      environment:
+        ADMIN_PASS: "{{ admin_pass.content | b64decode | trim }}"
       changed_when: false
+      no_log: true
 
     - name: Create host groups (Ansible use only)
       command: "ipa hostgroup-add {{ item.key }}-servers --desc='{{ item.key|upper }} environment servers'"
