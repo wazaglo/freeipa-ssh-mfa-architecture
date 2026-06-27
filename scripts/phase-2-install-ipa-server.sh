@@ -25,8 +25,6 @@ dnf module enable -y idm:DL1
 dnf install -y @idm:DL1 ipa-server ipa-server-dns
 
 # Backup existing passwords
-echo "[+] Admin password: $IPA_ADMIN_PASSWORD"
-echo "[+] Directory Manager password: $IPA_DM_PASSWORD"
 echo "$IPA_ADMIN_PASSWORD" > /root/.ipa_admin_pass
 echo "$IPA_DM_PASSWORD" > /root/.ipa_dm_pass
 chmod 600 /root/.ipa_admin_pass /root/.ipa_dm_pass

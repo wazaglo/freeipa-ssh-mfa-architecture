@@ -34,7 +34,7 @@ ipa group-add devops --desc="DevOps engineers (all environments)" --nonposix || 
 # ==========================================
 echo ""
 echo "=== Creating Users ==="
-DEFAULT_PASS="password"
+DEFAULT_PASS="${IPA_DEFAULT_PASSWORD:?Set IPA_DEFAULT_PASSWORD environment variable}"
 
 # Users assigned to deployment groups, NOT env user groups
 
@@ -109,6 +109,5 @@ ipa user-find
 
 echo ""
 echo "[+] Phase 5 complete."
-echo "[ ] Default password for all users: $DEFAULT_PASS"
 echo "[ ] Users are in deployment groups. Create HBAC rules next (Phase 7)."
 echo "[+] Next: Phase 6 - SSH Integration and Key Management"
