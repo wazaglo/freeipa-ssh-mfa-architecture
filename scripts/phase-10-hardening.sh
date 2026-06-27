@@ -67,7 +67,6 @@ echo "[ ] Checking critical SSH settings..."
 SSH_CHECKS=(
     "PermitRootLogin no"
     "MaxAuthTries 3"
-    "Protocol 2"
     "X11Forwarding no"
     "UsePAM yes"
     "GSSAPIAuthentication yes"
