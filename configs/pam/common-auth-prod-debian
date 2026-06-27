@@ -4,7 +4,7 @@
 #
 # Order: pam_unix.so first (standard), pam_sss.so with use_first_pass
 
-auth	[success=2 default=ignore]	pam_unix.so nullok
+auth	[success=2 default=ignore]	pam_unix.so
 auth	[success=1 default=ignore]	pam_sss.so use_first_pass
 auth	requisite			pam_deny.so
 auth	required			pam_permit.so

@@ -10,7 +10,7 @@
 auth        required      pam_env.so
 auth        required      pam_faildelay.so delay=2000000
 auth        sufficient    pam_sss.so forward_pass
-auth        sufficient    pam_unix.so nullok use_first_pass
+auth        sufficient    pam_unix.so use_first_pass
 auth        requisite     pam_succeed_if.so uid >= 1000 quiet_success
 auth        required      pam_deny.so
 

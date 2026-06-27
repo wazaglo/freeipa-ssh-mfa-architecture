@@ -8,7 +8,7 @@
 # common-auth is used by sudo and other services — kept standard.
 
 auth	[success=2 default=ignore]	pam_sss.so forward_pass
-auth	[success=1 default=ignore]	pam_unix.so nullok
+auth	[success=1 default=ignore]	pam_unix.so
 auth	requisite			pam_deny.so
 auth	required			pam_permit.so
 auth	optional			pam_cap.so
