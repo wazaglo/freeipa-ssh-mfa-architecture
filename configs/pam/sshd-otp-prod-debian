@@ -1,0 +1,17 @@
+# PRODUCTION SSH PAM service (sshd-otp) for Debian
+# Dedicated PAM service used only by SSH (not sudo)
+# Configured via: PAMService sshd-otp in sshd_config
+#
+# pam_sss.so comes FIRST to handle keyboard-interactive conversation
+# with separate Password: and OTP: prompts.
+#
+# common-auth is used by sudo and other services — kept standard.
+
+auth	[success=2 default=ignore]	pam_sss.so forward_pass
+auth	[success=1 default=ignore]	pam_unix.so nullok
+auth	requisite			pam_deny.so
+auth	required			pam_permit.so
+auth	optional			pam_cap.so
+
+@include common-account
+@include common-session-noninteractive

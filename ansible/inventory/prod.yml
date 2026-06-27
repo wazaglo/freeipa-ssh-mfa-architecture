@@ -1,0 +1,20 @@
+---
+all:
+  children:
+    prod:
+      hosts:
+        prd01.devuatprod.com:
+          ansible_host: 10.0.0.31
+        prd02.devuatprod.com:
+          ansible_host: 10.0.0.32
+        prd03.devuatprod.com:
+          ansible_host: 10.0.0.33
+      vars:
+        env: prod
+        auth_method: publickey,keyboard-interactive
+        sssd_template: sssd-prod.conf
+
+    ipa_servers:
+      hosts:
+        ipa.devuatprod.com:
+          ansible_host: 10.0.0.47

@@ -1,0 +1,83 @@
+---
+- name: Harden SSH and System Configuration
+  hosts: dev:uat:prod
+  become: yes
+
+  tasks:
+    - name: Ensure SELinux is enforcing
+      selinux:
+        policy: targeted
+        state: enforcing
+
+    - name: Configure firewalld (SSH only inbound)
+      firewalld:
+        service: ssh
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Remove unnecessary services from firewalld
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: disabled
+        immediate: yes
+      loop:
+        - dhcp
+        - dhcpv6
+      failed_when: false
+
+    - name: Install auditd
+      package:
+        name: auditd
+        state: present
+
+    - name: Configure audit rules for auth monitoring
+      copy:
+        dest: /etc/audit/rules.d/auth-monitoring.rules
+        content: |
+          -w /etc/ssh/sshd_config -p wa -k ssh_config
+          -w /etc/ssh/sshd_config.d/ -p wa -k ssh_config
+          -w /etc/pam.d/ -p wa -k pam_config
+          -w /etc/sssd/ -p wa -k sssd_config
+          -w /var/log/secure -p wa -k auth_log
+          -w /etc/passwd -p wa -k identity
+          -w /etc/group -p wa -k identity
+          -w /etc/shadow -p wa -k identity
+        mode: "0640"
+
+    - name: Load audit rules
+      command: augenrules --load
+      changed_when: false
+
+    - name: Enable auditd
+      service:
+        name: auditd
+        state: started
+        enabled: yes
+
+    - name: Verify SSH hardening settings
+      command: sshd -T
+      register: sshd_config
+      changed_when: false
+
+    - name: Check critical SSH settings
+      assert:
+        that:
+          - "'permitrootlogin no' in sshd_config.stdout"
+          - "'maxauthtries 3' in sshd_config.stdout"
+          - "'x11forwarding no' in sshd_config.stdout"
+        fail_msg: "SSH hardening check failed"
+        success_msg: "SSH hardening checks passed"
+
+    - name: Verify SSSD is running
+      service:
+        name: sssd
+        state: started
+        enabled: yes
+
+    - name: Verify oddjobd for mkhomedir
+      service:
+        name: oddjobd
+        state: started
+        enabled: yes

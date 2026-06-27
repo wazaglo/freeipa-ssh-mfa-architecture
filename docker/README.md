@@ -1,0 +1,209 @@
+# Docker Test Environment
+
+Self-contained FreeIPA SSH MFA stack running locally via Docker Compose.
+Spins up an IPA server plus three client containers — one per environment —
+each enforcing a different authentication method.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    test-net (172.20.0.0/24)                 │
+│                                                              │
+│   ┌──────────────────────┐                                  │
+│   │   ipa-server          │  172.20.0.10                    │
+│   │   ipa.test.local      │  DNS, Kerberos, LDAP, HTTPS    │
+│   └──────────┬───────────┘                                  │
+│              │                                               │
+│   ┌──────────┼──────────────────────────────┐               │
+│   │          │              │               │               │
+│   ▼          ▼              ▼               ▼               │
+│ ┌────────┐ ┌────────┐ ┌──────────┐                         │
+│ │ dev01   │ │ uat01   │ │  prd01    │                      │
+│ │ .11     │ │ .12     │ │  .13      │                      │
+│ └────────┘ └────────┘ └──────────┘                         │
+│  key-only   key+pass    key+pass+OTP                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Prerequisites
+
+- Docker Engine 24+ and Docker Compose v2
+- ~2 GB RAM available for the containers
+- Ports 53, 88, 389, 443, 464 free on the host (or remove `ports:` from the compose file)
+
+## Quick Start
+
+```bash
+cd docker/
+docker compose up -d
+./setup.sh
+```
+
+The first `docker compose up` will pull the FreeIPA server image (~800 MB) and
+build three client images. `setup.sh` waits for the IPA server to become
+healthy, then enrolls all clients, creates test users/groups, and configures
+HBAC rules.
+
+## What setup.sh Does
+
+| Step | Action |
+|------|--------|
+| 1/7 | Start all containers via `docker compose up -d` |
+| 2/7 | Wait for IPA server healthcheck (kinit against LDAP keytab, up to 5 min) |
+| 3/7 | Enroll each client into the FreeIPA domain via `ipa-client-install` |
+| 4/7 | Create host groups (`dev-servers`, `uat-servers`, `prod-servers`) and deployment groups (`crm-deployment`, `erp-deployment`, `monitoring`, `devops`) |
+| 5/7 | Create 5 test users with group assignments and known passwords |
+| 6/7 | Disable the default `allow_all` rule, remove old env-based rules, create deployment-specific HBAC rules (crm → specific hosts, erp → all envs, devops → all hosts) |
+| 7/7 | Generate an Ed25519 SSH key at `/tmp/ipa_test_ed25519` |
+
+## Container Details
+
+| Container | Hostname | IP | Env | Auth Method | Source config |
+|-----------|----------|----|-----|-------------|--------------|
+| `ipa-server` | `ipa.test.local` | `172.20.0.10` | — | — | — |
+| `ipa-dev01` | `dev01.test.local` | `172.20.0.11` | DEV | `publickey` (key only) | `configs/sshd_config.dev` |
+| `ipa-uat01` | `uat01.test.local` | `172.20.0.12` | UAT | `publickey,password` (key + password) | `configs/sshd_config.uat` |
+| `ipa-prd01` | `prd01.test.local` | `172.20.0.13` | PROD | `publickey,keyboard-interactive` (key + pass + OTP) | `configs/sshd_config.prod` |
+
+## Test Users
+
+| User | Password | Group(s) | DEV | UAT | PROD |
+|------|----------|----------|-----|-----|------|
+| jackson | Passw0rd! | crm-deployment | ✅ key | ❌ | ❌ |
+| mbappe | Passw0rd! | erp-deployment | ✅ key | ✅ key+pass | ✅ key+pass+OTP |
+| neymar | Passw0rd! | crm-deployment | ❌ | ❌ | ✅ key+pass+OTP |
+| john | Passw0rd! | crm-deployment (all envs) | ✅ key | ✅ key+pass | ✅ key+pass+OTP |
+| doe | Passw0rd! | devops (all envs) | ✅ key | ✅ key+pass | ✅ key+pass+OTP |
+| admin | admin123 | IPA admin | ✅ | ✅ | ✅ |
+
+## Testing SSH
+
+### DEV — key only
+
+```bash
+# Should succeed (key is verified, no password prompt)
+ssh -i /tmp/ipa_test_ed25519 \
+    -o PreferredAuthentications=publickey \
+    -o StrictHostKeyChecking=accept-new \
+    -o BatchMode=yes \
+    jackson@172.20.0.11 "hostname && whoami"
+```
+
+### UAT — key + password
+
+```bash
+# Key is verified silently, then you are prompted for the password
+ssh -i /tmp/ipa_test_ed25519 \
+    -o PreferredAuthentications=publickey,password \
+    mbappe@172.20.0.12 "hostname && whoami"
+```
+
+### PROD — key + password + OTP
+
+```bash
+# Key is verified silently, then Password: prompt, then OTP: prompt
+# (OTP is not pre-configured in Docker; the prod server still enforces
+#  the keyboard-interactive flow. Passwords work for basic testing.)
+ssh -i /tmp/ipa_test_ed25519 \
+    -o PreferredAuthentications=publickey,keyboard-interactive \
+    neymar@172.20.0.13 "hostname && whoami"
+```
+
+### HBAC denial — should fail
+
+```bash
+# jackson (crm-deployment) does NOT have access to UAT or PROD
+ssh -i /tmp/ipa_test_ed25519 -o BatchMode=yes \
+    jackson@172.20.0.12 "echo success"     # → denied
+ssh -i /tmp/ipa_test_ed25519 -o BatchMode=yes \
+    jackson@172.20.0.13 "echo success"     # → denied
+
+# neymar (crm-deployment) does NOT have access to DEV or UAT
+ssh -i /tmp/ipa_test_ed25519 -o BatchMode=yes \
+    neymar@172.20.0.11 "echo success"      # → denied
+ssh -i /tmp/ipa_test_ed25519 -o BatchMode=yes \
+    neymar@172.20.0.12 "echo success"      # → denied
+```
+
+## Interactive Container Access
+
+```bash
+# Open a shell in any client
+docker exec -it ipa-dev01 bash
+docker exec -it ipa-uat01 bash
+docker exec -it ipa-prd01 bash
+
+# Run IPA commands directly on the server
+docker exec ipa-server kinit admin <<< "admin123"
+docker exec ipa-server ipa user-find
+docker exec ipa-server ipa hbacrule-find --all
+```
+
+## IPA Web UI
+
+The FreeIPA web interface is available at **https://172.20.0.10**.
+
+- Username: `admin`
+- Password: `admin123`
+
+Accept the self-signed certificate warning.
+
+## File Structure
+
+```
+docker/
+├── docker-compose.yml        # Service definitions (1 server + 3 clients)
+├── Dockerfile.client          # AlmaLinux 9 with ipa-client, sssd, openssh
+├── docker-entrypoint.sh       # Starts sshd + init inside each client
+├── setup.sh                   # Full bootstrap script
+├── configs/
+│   ├── sshd_config.dev        # Key-only SSH config
+│   ├── sshd_config.uat        # Key + password SSH config
+│   └── sshd_config.prod       # Key + pass + OTP SSH config
+├── sssd/
+│   ├── sssd-dev.conf          # SSSD config for DEV
+│   ├── sssd-uat.conf          # SSSD config for UAT
+│   └── sssd-prod.conf         # SSSD config for PROD
+└── README.md                  # This file
+```
+
+## Stopping and Cleanup
+
+```bash
+# Stop containers (data persists in named volume)
+docker compose down
+
+# Stop and delete all data (IPA database, certs, everything)
+docker compose down -v
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|------------|-----|
+| IPA server healthcheck never passes | `start_period` too short | Increase `start_period` in `docker-compose.yml` or wait longer — first boot can take 3-5 min |
+| Client enrollment fails with "DNS not resolved" | Client needs DNS via IPA server | Clients use `dns: 172.20.0.10` via Docker DNS; verify `ipa-server` is healthy first |
+| SSH connection refused | sshd not running inside client | `docker exec ipa-dev01 systemctl start sshd` |
+| SSH key rejected | Key not uploaded to FreeIPA | Re-run `setup.sh` or manually upload: `docker exec -i ipa-server ipa user-add-certificate jackson --certificate=- < /tmp/ipa_test_ed25519.pub` |
+| `Permission denied (publickey)` when it should succeed | Wrong `PreferredAuthentications` | Use `-o PreferredAuthentications=publickey` for DEV, `publickey,password` for UAT, `publickey,keyboard-interactive` for PROD |
+| HBAC rule not blocking | `allow_all` still enabled | `docker exec ipa-server ipa hbacrule-disable allow_all` |
+
+## Limitations
+
+- **OTP is not pre-configured** in Docker. The PROD server is set up with the
+  correct `sshd_config` and PAM stack, but no TOTP tokens are created. For a
+  full OTP test, create tokens manually via `ipa otptoken-add` on the IPA
+  server.
+- **Single host per environment** — the real deployment has multiple hosts
+  per environment (dev01..devXX, uat01..uatXX, prd01..prd05). Docker runs
+  one per environment for simplicity.
+- **No HA/replica** — there is only one IPA server. In production you would
+  deploy replica servers for redundancy.
+- **Test passwords are weak** — `Passw0rd!` and `admin123` are for testing
+  only. Never use these in production.
+- **No certificate renewal** — the FreeIPA self-signed CA certs are used as-is.
+  No Let's Encrypt or external CA integration is set up in the Docker
+  environment.
+- **SELinux disabled** — the containers run with `seccomp:unconfined` and
+  SELinux is not enforced. Production hardening (Phase 10) depends on SELinux.

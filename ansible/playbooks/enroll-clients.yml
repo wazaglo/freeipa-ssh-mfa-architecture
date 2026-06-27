@@ -1,0 +1,180 @@
+---
+- name: Enroll Clients to FreeIPA Domain
+  hosts: dev:uat:prod
+  become: yes
+  vars:
+    ipa_server: ipa.devuatprod.com
+    ipa_domain: devuatprod.com
+    ipa_realm: DEVUATPROD.COM
+    admin_password: "{{ lookup('file', '/root/.ipa_admin_pass') }}"
+
+  pre_tasks:
+    - name: Detect env from FreeIPA host group if not set
+      set_fact:
+        env: "{{ item.key }}"
+      when: env is not defined
+      loop:
+        - { key: dev,  hostgroup: dev-servers  }
+        - { key: uat,  hostgroup: uat-servers  }
+        - { key: prod, hostgroup: prod-servers }
+      vars:
+        _hostgroups: "{{ query('freeipa.ansible_freeipa.ipahostgroup_find',
+                         name='*-servers',
+                         host=inventory_hostname) }}"
+      tags: [always]
+
+    - name: Fail if env could not be determined
+      fail:
+        msg: "Could not determine environment. Set env var via inventory group or add host to a *-servers host group."
+      when: env is not defined
+
+  tasks:
+    - name: Install IPA client packages
+      package:
+        name:
+          - ipa-client
+          - oddjob-mkhomedir
+          - sssd
+          - sssd-tools
+        state: present
+
+    - name: Join IPA domain
+      command: >
+        ipa-client-install
+        --domain={{ ipa_domain }}
+        --realm={{ ipa_realm }}
+        --server={{ ipa_server }}
+        --enable-dns-updates
+        --mkhomedir
+        --force-join
+        --unattended
+      args:
+        creates: /etc/ipa/default.conf
+
+    - name: Enable oddjobd
+      service:
+        name: oddjobd
+        state: started
+        enabled: yes
+
+    - name: Add host to environment host group
+      command: >
+        ipa hostgroup-add-member {{ env }}-servers
+        --hosts={{ ansible_fqdn }}
+      changed_when: false
+      failed_when: false
+
+    - name: Apply SSSD config
+      copy:
+        src: ../../../configs/sssd/sssd-{{ env }}.conf
+        dest: /etc/sssd/sssd.conf
+        mode: "0600"
+      notify: restart sssd
+
+    - name: Configure SSH authorized keys command
+      copy:
+        dest: /etc/ssh/sshd_config.d/ipa-keys.conf
+        content: |
+          AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys
+          AuthorizedKeysCommandUser nobody
+        mode: "0644"
+
+    - name: Apply environment SSH config
+      include_role:
+        name: ssh-hardening
+
+    - name: Apply KDC OTP plugin config (PROD only)
+      copy:
+        src: ../../../configs/krb5/ipa-otp.conf
+        dest: /etc/krb5.conf.d/ipa-otp.conf
+        mode: "0644"
+      when: env == 'prod'
+
+    - name: Create SSH-OTP PAM service (Debian, PROD only)
+      copy:
+        dest: /etc/pam.d/sshd-otp
+        content: |
+          #%PAM-1.0
+          auth    [success=2 default=ignore]      pam_sss.so forward_pass
+          auth    [success=1 default=ignore]      pam_unix.so nullok
+          auth    requisite                       pam_deny.so
+          auth    required                        pam_permit.so
+          auth    optional                        pam_cap.so
+          @include common-account
+          @include common-session-noninteractive
+        mode: "0644"
+      when:
+        - env == 'prod'
+        - ansible_os_family == 'Debian'
+
+    - name: Create SSH-OTP PAM service (RHEL, PROD only)
+      copy:
+        dest: /etc/pam.d/sshd-otp
+        content: |
+          #%PAM-1.0
+          auth        required      pam_env.so
+          auth        required      pam_faildelay.so delay=2000000
+          auth        sufficient    pam_sss.so forward_pass
+          auth        sufficient    pam_unix.so nullok use_first_pass
+          auth        requisite     pam_succeed_if.so uid >= 1000 quiet_success
+          auth        required      pam_deny.so
+          account     required      pam_faillock.so preauth
+          account     required      pam_unix.so
+          account     sufficient    pam_localuser.so
+          account     sufficient    pam_succeed_if.so uid < 1000 quiet
+          account     required      pam_sss.so
+          account     required      pam_faillock.so authfail
+          account     required      pam_permit.so
+          session     optional      pam_keyinit.so revoke
+          session     required      pam_limits.so
+          session     optional      pam_oddjob_mkhomedir.so
+          session     optional      pam_systemd.so
+          session     required      pam_unix.so
+          session     optional      pam_sss.so
+        mode: "0644"
+      when:
+        - env == 'prod'
+        - ansible_os_family == 'RedHat'
+
+    - name: Configure sshd to use SSH-OTP PAM service (PROD only)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PAMService'
+        line: 'PAMService sshd-otp'
+      when: env == 'prod'
+
+    - name: Keep common-auth standard for sudo (Debian, no OTP)
+      copy:
+        dest: /etc/pam.d/common-auth
+        content: |
+          #%PAM-1.0
+          auth    [success=2 default=ignore]      pam_unix.so nullok
+          auth    [success=1 default=ignore]      pam_sss.so use_first_pass
+          auth    requisite                       pam_deny.so
+          auth    required                        pam_permit.so
+          auth    optional                        pam_cap.so
+        mode: "0644"
+      when:
+        - env == 'prod'
+        - ansible_os_family == 'Debian'
+
+    - name: Restart services
+      service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      loop:
+        - sssd
+        - sshd
+
+    - name: Verify enrollment
+      command: ipa user-find admin
+      changed_when: false
+      register: result
+      failed_when: result.rc != 0
+
+  handlers:
+    - name: restart sssd
+      service:
+        name: sssd
+        state: restarted

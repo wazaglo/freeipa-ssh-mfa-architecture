@@ -1,0 +1,18 @@
+---
+all:
+  children:
+    uat:
+      hosts:
+        uat01.devuatprod.com:
+          ansible_host: 10.0.0.21
+        uat02.devuatprod.com:
+          ansible_host: 10.0.0.22
+      vars:
+        env: uat
+        auth_method: publickey,password
+        sssd_template: sssd-uat.conf
+
+    ipa_servers:
+      hosts:
+        ipa.devuatprod.com:
+          ansible_host: 10.0.0.47

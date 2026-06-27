@@ -1,0 +1,29 @@
+---
+- name: Ensure admin Kerberos ticket
+  shell: kinit admin <<< "$(cat /root/.ipa_admin_pass)"
+  changed_when: false
+
+- name: Disable default allow_all rule
+  command: ipa hbacrule-disable allow_all
+  changed_when: false
+  failed_when: false
+
+- name: Create HBAC rule for environment
+  command: "ipa hbacrule-add {{ env }}-access --desc='{{ env|upper }} access rule'"
+  changed_when: false
+  failed_when: false
+
+- name: Add user group to HBAC rule
+  command: "ipa hbacrule-add-user {{ env }}-access --groups={{ env }}-users"
+  changed_when: false
+  failed_when: false
+
+- name: Add host group to HBAC rule
+  command: "ipa hbacrule-add-host {{ env }}-access --hostgroups={{ env }}-servers"
+  changed_when: false
+  failed_when: false
+
+- name: Add sshd service to HBAC rule
+  command: "ipa hbacrule-add-service {{ env }}-access --services=sshd"
+  changed_when: false
+  failed_when: false

@@ -1,0 +1,18 @@
+---
+all:
+  children:
+    dev:
+      hosts:
+        dev01.devuatprod.com:
+          ansible_host: 10.0.0.11
+        dev02.devuatprod.com:
+          ansible_host: 10.0.0.12
+      vars:
+        env: dev
+        auth_method: publickey
+        sssd_template: sssd-dev.conf
+
+    ipa_servers:
+      hosts:
+        ipa.devuatprod.com:
+          ansible_host: 10.0.0.47

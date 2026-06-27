@@ -1,0 +1,38 @@
+---
+- name: Install IPA client packages
+  dnf:
+    name:
+      - ipa-client
+      - oddjob-mkhomedir
+      - sssd
+    state: present
+
+- name: Join IPA domain
+  command: >
+    ipa-client-install
+    --domain={{ ipa_domain }}
+    --realm={{ ipa_realm }}
+    --server={{ ipa_server }}
+    --enable-dns-updates
+    --mkhomedir
+    --force-join
+    --unattended
+  args:
+    creates: /etc/ipa/default.conf
+
+- name: Configure authorized keys command
+  copy:
+    dest: /etc/ssh/sshd_config.d/ipa-keys.conf
+    content: |
+      AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys
+      AuthorizedKeysCommandUser nobody
+    mode: "0644"
+
+- name: Restart services
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+  loop:
+    - sssd
+    - sshd

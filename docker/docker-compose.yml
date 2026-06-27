@@ -1,0 +1,132 @@
+networks:
+  test-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+services:
+  ipa-server:
+    image: freeipa/freeipa-server:almalinux-9-4.12.2
+    hostname: ipa.test.local
+    container_name: ipa-server
+    networks:
+      test-net:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "88:88/tcp"
+      - "88:88/udp"
+      - "389:389"
+      - "443:443"
+      - "464:464/tcp"
+      - "464:464/udp"
+    environment:
+      IPA_SERVER_HOSTNAME: ipa.test.local
+      IPA_DOMAIN: test.local
+      IPA_REALM: TEST.LOCAL
+      IPA_ADMIN_PASSWORD: admin123
+      IPA_DM_PASSWORD: dm12345
+      IPA_SERVER_DNS: "yes"
+      IPA_SERVER_NTP: "yes"
+      IPA_SERVER_IP: 172.20.0.10
+      IPA_SERVER_INSTALL_OPTS: >
+        --setup-dns
+        --no-forwarders
+        --auto-reverse
+        --mkhomedir
+        --unattended
+    volumes:
+      - ipa-data:/data
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_TIME
+    security_opt:
+      - seccomp:unconfined
+    tmpfs:
+      - /run
+      - /tmp
+    stop_grace_period: 120s
+    healthcheck:
+      test: ["CMD", "kinit", "-kt", "/etc/dirsrv/ds.keytab", "ldap/ipa.test.local"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  dev01:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      args:
+        env: dev
+    hostname: dev01.test.local
+    container_name: ipa-dev01
+    networks:
+      test-net:
+        ipv4_address: 172.20.0.11
+    depends_on:
+      ipa-server:
+        condition: service_healthy
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    tmpfs:
+      - /run
+      - /tmp
+    stdin_open: true
+    tty: true
+
+  uat01:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      args:
+        env: uat
+    hostname: uat01.test.local
+    container_name: ipa-uat01
+    networks:
+      test-net:
+        ipv4_address: 172.20.0.12
+    depends_on:
+      ipa-server:
+        condition: service_healthy
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    tmpfs:
+      - /run
+      - /tmp
+    stdin_open: true
+    tty: true
+
+  prd01:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      args:
+        env: prod
+    hostname: prd01.test.local
+    container_name: ipa-prd01
+    networks:
+      test-net:
+        ipv4_address: 172.20.0.13
+    depends_on:
+      ipa-server:
+        condition: service_healthy
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    tmpfs:
+      - /run
+      - /tmp
+    stdin_open: true
+    tty: true
+
+volumes:
+  ipa-data:

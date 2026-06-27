@@ -1,0 +1,91 @@
+---
+- name: Install FreeIPA Server
+  hosts: ipa_servers
+  become: yes
+  vars:
+    ipa_domain: devuatprod.com
+    ipa_realm: DEVUATPROD.COM
+    ipa_admin_password: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters,digits') }}"
+    ipa_dm_password: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters,digits') }}"
+
+  tasks:
+    - name: Set hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Install FreeIPA dependencies
+      dnf:
+        name:
+          - chrony
+          - firewalld
+          - bind-utils
+        state: present
+
+    - name: Start chronyd
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+
+    - name: Enable IDM module
+      dnf:
+        name: "@idm:DL1"
+        state: present
+
+    - name: Install FreeIPA server packages
+      dnf:
+        name:
+          - ipa-server
+          - ipa-server-dns
+        state: present
+
+    - name: Configure firewalld for IPA services
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - freeipa-ldap
+        - freeipa-ldaps
+        - dns
+        - ntp
+        - kerberos
+        - ssh
+        - http
+        - https
+
+    - name: Run IPA server installer
+      command: >
+        ipa-server-install
+        --setup-dns
+        --auto-forwarders
+        --auto-reverse
+        --ds-password={{ ipa_dm_password }}
+        --admin-password={{ ipa_admin_password }}
+        --domain={{ ipa_domain }}
+        --realm={{ ipa_realm }}
+        --hostname={{ inventory_hostname }}
+        --ip-address={{ ansible_default_ipv4.address }}
+        --mkhomedir
+        --unattended
+      args:
+        creates: /etc/ipa/default.conf
+
+    - name: Save admin credentials
+      copy:
+        content: "{{ ipa_admin_password }}"
+        dest: /root/.ipa_admin_pass
+        mode: "0600"
+
+    - name: Save DM credentials
+      copy:
+        content: "{{ ipa_dm_password }}"
+        dest: /root/.ipa_dm_pass
+        mode: "0600"
+
+    - name: Verify IPA installation
+      command: kinit admin
+      environment:
+        KRB5_TRACE: /dev/stderr
+      changed_when: false

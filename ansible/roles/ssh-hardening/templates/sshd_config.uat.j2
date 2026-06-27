@@ -1,0 +1,19 @@
+PubkeyAuthentication yes
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+AuthenticationMethods publickey,password
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+UsePAM yes
+X11Forwarding no
+PermitRootLogin no
+MaxAuthTries 3
+MaxSessions 10
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/libexec/openssh/sftp-server
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com

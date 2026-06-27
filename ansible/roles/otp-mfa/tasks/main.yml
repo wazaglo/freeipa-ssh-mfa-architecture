@@ -1,0 +1,24 @@
+---
+- name: Create OTP token for production user
+  command: >
+    ipa otptoken-add
+    --type=totp
+    --owner={{ item }}
+    --desc="Production OTP Token for {{ item }}"
+    --digits=6
+    --interval=30
+    --not-after=20270101000000Z
+    "{{ item }}-prod-otp"
+  changed_when: false
+  failed_when: false
+  loop: "{{ prod_users }}"
+
+- name: Display OTP token URIs
+  command: "ipa otptoken-show {{ item }}-prod-otp --all | grep uri"
+  changed_when: false
+  register: otp_uris
+  loop: "{{ prod_users }}"
+
+- name: Show OTP URIs for distribution
+  debug:
+    msg: "{{ otp_uris.results | map(attribute='stdout') | list }}"

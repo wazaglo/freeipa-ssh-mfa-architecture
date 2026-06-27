@@ -1,0 +1,62 @@
+# Credentials and secrets
+secrets/
+*.env
+*.env.*
+!.gitignore
+!secrets/*.env.example
+
+# Keys and certificates
+*.key
+*.pem
+*.crt
+*.keytab
+*.p12
+*.pfx
+*.jks
+
+# Ansible
+vault_password*
+.vault_pass*
+*.retry
+
+# Certificate signing requests
+*.csr
+
+# Backup files
+*.old
+*.orig
+*.tar.gz
+*.tgz
+
+# Docker local data
+ipa-data/
+
+# Logs
+*.log
+
+# Credentials patterns
+credentials*
+*secret*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.bak
+
+# Python
+*.pyc
+__pycache__/
+
+# Terraform
+*.tfstate*
+*.tfvars
+
+# Vagrant
+.vagrant/

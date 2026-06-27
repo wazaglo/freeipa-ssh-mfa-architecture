@@ -1,0 +1,38 @@
+---
+- name: Backup existing SSH config
+  copy:
+    src: /etc/ssh/sshd_config
+    dest: /etc/ssh/sshd_config.backup.{{ ansible_date_time.epoch }}
+    remote_src: yes
+
+- name: Apply environment-specific SSH config
+  template:
+    src: "sshd_config.{{ env }}.j2"
+    dest: /etc/ssh/sshd_config
+    mode: "0600"
+  notify: restart sshd
+
+- name: Enable and start oddjobd for mkhomedir
+  service:
+    name: oddjobd
+    state: started
+    enabled: yes
+
+- name: Configure faillock
+  copy:
+    dest: /etc/security/faillock.conf
+    content: |
+      deny = 5
+      unlock_time = 900
+      fail_interval = 900
+      even_deny_root
+    mode: "0644"
+
+- name: Verify SSH config
+  command: sshd -t
+  changed_when: false
+
+- name: Restart SSHD
+  service:
+    name: sshd
+    state: restarted

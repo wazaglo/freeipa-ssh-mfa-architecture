@@ -1,0 +1,132 @@
+---
+- name: Configure HBAC Rules for Deployment Groups
+  hosts: ipa_servers
+  become: yes
+  gather_facts: no
+
+  vars:
+    ipa_domain: devuatprod.com
+    # Host groups — Ansible use only, NOT for HBAC
+    hosts:
+      dev:
+        - dev01
+        - dev02
+      uat:
+        - uat01
+        - uat02
+      prod:
+        - prd01
+        - prd02
+        - prd03
+        - prd04
+        - prd05
+
+    # Deployment groups and their specific host access
+    deployments:
+      crm:
+        desc: "CRM project team"
+        hosts:
+          dev: [dev01]
+          uat: [uat01]
+          prod: [prd01, prd02]
+      erp:
+        desc: "ERP project team"
+        hosts:
+          dev: [dev02]
+          uat: [uat02]
+          prod: [prd03, prd04]
+      monitoring:
+        desc: "Monitoring team"
+        hosts:
+          prod: [prd01, prd02, prd03, prd04, prd05]
+
+  tasks:
+    - name: Ensure admin Kerberos ticket
+      shell: |
+        kinit admin <<< "$(cat /root/.ipa_admin_pass)"
+      changed_when: false
+
+    - name: Create host groups (Ansible use only)
+      command: "ipa hostgroup-add {{ item.key }}-servers --desc='{{ item.key|upper }} environment servers'"
+      changed_when: false
+      failed_when: false
+      loop: "{{ hosts | dict2items }}"
+
+    - name: Add hosts to host groups
+      command: "ipa hostgroup-add-member {{ item.0.key }}-servers --hosts={{ item.1 }}.{{ ipa_domain }}"
+      changed_when: false
+      failed_when: false
+      loop: "{{ hosts | dict2items | subelements('value') }}"
+
+    - name: Create deployment groups
+      command: "ipa group-add {{ item.key }}-deployment --desc='{{ item.value.desc }}' --nonposix"
+      changed_when: false
+      failed_when: false
+      loop: "{{ deployments | dict2items }}"
+
+    - name: Create devops group
+      command: "ipa group-add devops --desc='DevOps engineers (all environments)' --nonposix"
+      changed_when: false
+      failed_when: false
+
+    - name: Disable default allow_all rule
+      command: "ipa hbacrule-disable allow_all"
+      changed_when: false
+      failed_when: false
+
+    - name: Remove old env-based HBAC rules if present
+      command: "ipa hbacrule-del {{ item }}"
+      changed_when: false
+      failed_when: true
+      loop:
+        - dev-access
+        - uat-access
+        - prod-access
+
+    - name: Create deployment HBAC rules
+      command: "ipa hbacrule-add {{ item.0.key }}-{{ item.1.key }}-access --desc='{{ item.0.value.desc }} access {{ item.1.key|upper }}'"
+      changed_when: false
+      failed_when: false
+      loop: "{{ deployments | dict2items | subelements('value.hosts', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.key }}-{{ item.1.key }}"
+
+    - name: Add deployment group user to HBAC rule
+      command: "ipa hbacrule-add-user {{ item.0.key }}-{{ item.1.key }}-access --groups={{ item.0.key }}-deployment"
+      changed_when: false
+      failed_when: false
+      loop: "{{ deployments | dict2items | subelements('value.hosts', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.key }}-{{ item.1.key }}"
+
+    - name: Add specific hosts to deployment HBAC rules
+      command: "ipa hbacrule-add-host {{ item.0.key }}-{{ item.1.key }}-access --hosts={{ host }}.{{ ipa_domain }}"
+      changed_when: false
+      failed_when: false
+      loop: "{{ deployments | dict2items | subelements('value.hosts', skip_missing=True) | subelements('value.1', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.key }}-{{ item.0.value.key }}-{{ item.1 }}"
+
+    - name: Add sshd service to deployment HBAC rules
+      command: "ipa hbacrule-add-service {{ item.0.key }}-{{ item.1.key }}-access --services=sshd"
+      changed_when: false
+      failed_when: false
+      loop: "{{ deployments | dict2items | subelements('value.hosts', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.key }}-{{ item.1.key }}"
+
+    - name: Create devops all-access HBAC rule
+      command: "ipa hbacrule-add devops-all-access --desc='DevOps engineers access all environments via SSH'"
+      changed_when: false
+      failed_when: false
+
+    - name: Configure devops all-access rule
+      command: "{{ item }}"
+      changed_when: false
+      failed_when: false
+      loop:
+        - "ipa hbacrule-add-user devops-all-access --groups=devops"
+        - "ipa hbacrule-add-host devops-all-access --hostgroups=dev-servers"
+        - "ipa hbacrule-add-host devops-all-access --hostgroups=uat-servers"
+        - "ipa hbacrule-add-host devops-all-access --hostgroups=prod-servers"
+        - "ipa hbacrule-add-service devops-all-access --services=sshd"

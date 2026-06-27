@@ -1,0 +1,28 @@
+---
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Install IPA server packages
+  dnf:
+    name:
+      - ipa-server
+      - ipa-server-dns
+    state: present
+
+- name: Run IPA server installer
+  command: >
+    ipa-server-install
+    --setup-dns
+    --auto-forwarders
+    --auto-reverse
+    --ds-password={{ ipa_dm_password }}
+    --admin-password={{ ipa_admin_password }}
+    --domain={{ ipa_domain }}
+    --realm={{ ipa_realm }}
+    --hostname={{ inventory_hostname }}
+    --ip-address={{ ansible_default_ipv4.address }}
+    --mkhomedir
+    --unattended
+  args:
+    creates: /etc/ipa/default.conf

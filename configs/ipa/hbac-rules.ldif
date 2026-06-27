@@ -1,0 +1,102 @@
+# FreeIPA HBAC Rules LDIF
+# Deployment groups → specific hosts (NOT host groups)
+#
+# Host groups (dev-servers, uat-servers, prod-servers) are used ONLY
+# by Ansible to apply sshd_config. They are NOT used in HBAC rules.
+#
+# NOTE: The preferred method is to use 'ipa hbacrule-*' CLI commands.
+# LDIF is provided for reference and automation via ldapmodify.
+#
+# After creating rules, disable the default allow_all rule:
+#   ipa hbacrule-disable allow_all
+#
+# Import:
+#   ldapmodify -h ipa.devuatprod.com -p 389 -D "cn=Directory Manager" -W -f hbac-rules.ldif
+
+# --- CRM DEV Access ---
+# dn: cn=crm-dev-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: CRM team access DEV server
+# cn: crm-dev-access
+# memberuser_group_cn: crm-deployment
+# memberhost_host_cn: dev01.devuatprod.com
+# member_service_cn: sshd
+# -
+
+# --- CRM UAT Access ---
+# dn: cn=crm-uat-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: CRM team access UAT server
+# cn: crm-uat-access
+# memberuser_group_cn: crm-deployment
+# memberhost_host_cn: uat01.devuatprod.com
+# member_service_cn: sshd
+# -
+
+# --- CRM PROD Access ---
+# dn: cn=crm-prod-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: CRM team access PROD servers
+# cn: crm-prod-access
+# memberuser_group_cn: crm-deployment
+# memberhost_host_cn: prd01.devuatprod.com
+# memberhost_host_cn: prd02.devuatprod.com
+# member_service_cn: sshd
+# -
+
+# --- ERP All Access ---
+# dn: cn=erp-all-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: ERP team access all environments
+# cn: erp-all-access
+# memberuser_group_cn: erp-deployment
+# memberhost_host_cn: dev02.devuatprod.com
+# memberhost_host_cn: uat02.devuatprod.com
+# memberhost_host_cn: prd03.devuatprod.com
+# memberhost_host_cn: prd04.devuatprod.com
+# member_service_cn: sshd
+# -
+
+# --- Monitoring Access ---
+# dn: cn=monitoring-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: Monitoring team access PROD servers
+# cn: monitoring-access
+# memberuser_group_cn: monitoring
+# memberhost_host_cn: prd01.devuatprod.com
+# memberhost_host_cn: prd02.devuatprod.com
+# memberhost_host_cn: prd03.devuatprod.com
+# memberhost_host_cn: prd04.devuatprod.com
+# memberhost_host_cn: prd05.devuatprod.com
+# member_service_cn: sshd
+# -
+
+# --- DevOps All-Access Rule (exception — uses host groups) ---
+# dn: cn=devops-all-access,cn=hbac,dc=devuatprod,dc=com
+# changetype: add
+# objectclass: ipahbacrule
+# objectclass: ipahbacruleallow
+# ipaenabledflag: TRUE
+# description: DevOps engineers can access all environments
+# cn: devops-all-access
+# memberuser_group_cn: devops
+# memberhost_hostgroup_cn: dev-servers
+# memberhost_hostgroup_cn: uat-servers
+# memberhost_hostgroup_cn: prod-servers
+# member_service_cn: sshd
+# -
