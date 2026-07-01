@@ -29,6 +29,9 @@ RUN chmod 0600 /etc/ssh/sshd_config && \
     chmod 0600 /etc/sssd/sssd.conf && \
     echo "UseDNS no" >> /etc/ssh/sshd_config
 
+# Pre-configure default Kerberos realm; overridden by ipa-client-install at join time
+RUN echo -e "[libdefaults]\n    default_realm = TEST.LOCAL" > /etc/krb5.conf.d/default-realm
+
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 

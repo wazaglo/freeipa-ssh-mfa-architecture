@@ -7,12 +7,17 @@ networks:
 
 services:
   ipa-server:
-    image: freeipa/freeipa-server:almalinux-9-4.12.2
+    image: freeipa/freeipa-server:almalinux-9
     hostname: ipa.test.local
     container_name: ipa-server
+    privileged: true
     networks:
       test-net:
         ipv4_address: 172.20.0.10
+    extra_hosts:
+      dev01.test.local: 172.20.0.11
+      uat01.test.local: 172.20.0.12
+      prd01.test.local: 172.20.0.13
     ports:
       - "53:53/udp"
       - "53:53/tcp"
@@ -23,15 +28,12 @@ services:
       - "464:464/tcp"
       - "464:464/udp"
     environment:
-      IPA_SERVER_HOSTNAME: ipa.test.local
-      IPA_DOMAIN: test.local
-      IPA_REALM: TEST.LOCAL
-      IPA_ADMIN_PASSWORD: ${IPA_ADMIN_PASSWORD:?Set IPA_ADMIN_PASSWORD in docker/.env}
-      IPA_DM_PASSWORD: ${IPA_DM_PASSWORD:?Set IPA_DM_PASSWORD in docker/.env}
-      IPA_SERVER_DNS: "yes"
-      IPA_SERVER_NTP: "yes"
+      PASSWORD: admin123
       IPA_SERVER_IP: 172.20.0.10
       IPA_SERVER_INSTALL_OPTS: >
+        --realm=TEST.LOCAL
+        --domain=test.local
+        --hostname=ipa.test.local
         --setup-dns
         --no-forwarders
         --auto-reverse
@@ -39,22 +41,17 @@ services:
         --unattended
     volumes:
       - ipa-data:/data
-    cap_add:
-      - SYS_ADMIN
-      - NET_ADMIN
-      - SYS_TIME
-    security_opt:
-      - seccomp:unconfined
+    command: no-exit
     tmpfs:
       - /run
       - /tmp
     stop_grace_period: 120s
     healthcheck:
-      test: ["CMD", "kinit", "-kt", "/etc/dirsrv/ds.keytab", "ldap/ipa.test.local"]
+      test: ["CMD", "ldapsearch", "-H", "ldap://127.0.0.1:389", "-x", "-LLL", "-b", "cn=ipa,cn=etc,dc=test,dc=local"]
       interval: 30s
       timeout: 10s
-      retries: 15
-      start_period: 120s
+      retries: 30
+      start_period: 180s
 
   dev01:
     build:
@@ -67,18 +64,18 @@ services:
     networks:
       test-net:
         ipv4_address: 172.20.0.11
+    extra_hosts:
+      ipa.test.local: 172.20.0.10
+    dns:
+      - 172.20.0.10
     depends_on:
       ipa-server:
         condition: service_healthy
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp:unconfined
-    tmpfs:
-      - /run
-      - /tmp
-    stdin_open: true
-    tty: true
+    environment:
+      IPA_SERVER: ipa.test.local
+      IPA_DOMAIN: test.local
+      IPA_REALM: TEST.LOCAL
+      ADMIN_PASS: admin123
 
   uat01:
     build:
@@ -91,18 +88,18 @@ services:
     networks:
       test-net:
         ipv4_address: 172.20.0.12
+    extra_hosts:
+      ipa.test.local: 172.20.0.10
+    dns:
+      - 172.20.0.10
     depends_on:
       ipa-server:
         condition: service_healthy
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp:unconfined
-    tmpfs:
-      - /run
-      - /tmp
-    stdin_open: true
-    tty: true
+    environment:
+      IPA_SERVER: ipa.test.local
+      IPA_DOMAIN: test.local
+      IPA_REALM: TEST.LOCAL
+      ADMIN_PASS: admin123
 
   prd01:
     build:
@@ -115,18 +112,18 @@ services:
     networks:
       test-net:
         ipv4_address: 172.20.0.13
+    extra_hosts:
+      ipa.test.local: 172.20.0.10
+    dns:
+      - 172.20.0.10
     depends_on:
       ipa-server:
         condition: service_healthy
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp:unconfined
-    tmpfs:
-      - /run
-      - /tmp
-    stdin_open: true
-    tty: true
+    environment:
+      IPA_SERVER: ipa.test.local
+      IPA_DOMAIN: test.local
+      IPA_REALM: TEST.LOCAL
+      ADMIN_PASS: admin123
 
 volumes:
   ipa-data:

@@ -3,7 +3,6 @@ PasswordAuthentication no
 KbdInteractiveAuthentication yes
 
 AuthenticationMethods publickey,keyboard-interactive
-PAMService sshd-otp
 GSSAPIAuthentication yes
 GSSAPICleanupCredentials yes
 UsePAM yes

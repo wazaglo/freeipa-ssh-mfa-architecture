@@ -19,8 +19,18 @@ echo ""
 
 # ------------------------------------------------------------------
 echo "[2/7] Waiting for IPA server to be ready..."
+# Create admin keytab on IPA server for passwordless kinit
+# We use the admin password once to create a keytab, then use keytab for subsequent auth
+echo "  Creating admin keytab on IPA server..."
+docker exec ipa-server bash -c "
+    echo '${IPA_ADMIN_PASS}' | kinit admin && \
+    ipa keytab add -k /tmp/.ipa_admin_keytab 2>/dev/null || \
+    ipa keytab add -k /tmp/.ipa_admin_keytab
+" 2>/dev/null
+chmod 600 /tmp/.ipa_admin_keytab 2>/dev/null || true
+
 for i in $(seq 1 60); do
-    if docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null; then
+    if docker exec ipa-server bash -c "kinit admin -kt /tmp/.ipa_admin_keytab" 2>/dev/null; then
         echo "  IPA server is healthy (attempt $i)"
         break
     fi
@@ -31,6 +41,11 @@ for i in $(seq 1 60); do
     sleep 5
 done
 echo ""
+
+# Helper function to kinit with keytab
+kinit_admin() {
+    docker exec ipa-server kinit admin -kt /tmp/.ipa_admin_keytab
+}
 
 enroll_client() {
     local name="$1"
@@ -43,7 +58,6 @@ enroll_client() {
         --realm="$IPA_REALM" \
         --server="$IPA_SERVER" \
         --ip-address="$ip" \
-        --enable-dns-updates \
         --mkhomedir \
         --force-join \
         --unattended \
@@ -52,11 +66,12 @@ enroll_client() {
         --no-ntp \
         &>/dev/null || true
 
-    docker exec "$name" systemctl enable oddjobd --now &>/dev/null || true
-    docker exec "$name" systemctl restart sssd sshd &>/dev/null || true
+    docker exec "$name" oddjobd --start &>/dev/null || true
+    docker exec "$name" sssd --start &>/dev/null || true
+    docker exec "$name" /usr/sbin/sshd &>/dev/null || true
 
     # Add to host group
-    docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null
+    kinit_admin
     docker exec ipa-server ipa hostgroup-add-member "${env_name}-servers" \
         --hosts="$name.$IPA_DOMAIN" &>/dev/null || true
 }
@@ -69,7 +84,7 @@ echo ""
 
 # ------------------------------------------------------------------
 echo "[4/7] Creating host groups and deployment groups..."
-docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null
+kinit_admin
 
 for hg in dev-servers uat-servers prod-servers; do
     docker exec ipa-server ipa hostgroup-add "$hg" --desc="$(echo $hg | cut -d- -f1 | tr '[:lower:]' '[:upper:]') servers" &>/dev/null || true
@@ -88,7 +103,7 @@ create_user() {
     local last="$3"
     local groups="$4"
 
-    docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null
+    kinit_admin
     docker exec ipa-server ipa user-add "$uid" \
         --first="$first" --last="$last" \
         --shell=/bin/bash \
@@ -114,7 +129,7 @@ echo ""
 
 # ------------------------------------------------------------------
 echo "[6/7] Configuring HBAC rules..."
-docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null
+kinit_admin
 
 # Disable default allow_all
 docker exec ipa-server ipa hbacrule-disable allow_all &>/dev/null || true
@@ -166,7 +181,7 @@ fi
 
 PUB_KEY=$(cat "${SSH_KEY_FILE}.pub")
 docker exec ipa-server ipa user-add admin --first=Admin --last=User &>/dev/null || true
-docker exec ipa-server kinit admin <<< "$IPA_ADMIN_PASS" &>/dev/null
+kinit_admin
 echo "$PUB_KEY" | docker exec -i ipa-server ipa user-add-certificate admin --certificate=- &>/dev/null || true
 echo ""
 
