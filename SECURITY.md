@@ -19,7 +19,7 @@ This repository contains a reference architecture for FreeIPA SSH MFA. Before de
 ### Infrastructure
 
 - **Replace all example values.** This repository uses `devuatprod.com`, `10.0.0.x` IPs, and specific hostnames from a test deployment. Change every occurrence before production use.
-- **Use LDAPS (port 636)** for all LDAP communication. The LDIF examples reference plain LDAP (port 389) — do not use unencrypted LDAP in production.
+- **Use LDAPS (port 636)** for all LDAP communication. The LDIF examples reference plain LDAP (port 389), do not use unencrypted LDAP in production.
 - **Pre-distribute SSH host keys** via Ansible or configuration management. Do not rely on `StrictHostKeyChecking=accept-new` in production.
 
 ### PAM Configuration
@@ -68,7 +68,7 @@ The following security issues remain in the current codebase. They are documente
 ## Network Security
 
 - Restrict SSH access to authorized networks via firewall rules (firewalld, UFW, or iptables).
-- Use FreeIPA's HBAC rules to enforce per-host access control — do not rely solely on network-level restrictions.
+- Use FreeIPA's HBAC rules to enforce per-host access control, do not rely solely on network-level restrictions.
 - Enable audit logging for authentication events (configured by `scripts/phase-10-hardening.sh`).
 - Review audit logs regularly:
   ```bash

@@ -36,7 +36,7 @@ Centralized authentication system using FreeIPA to manage SSH access across DEV,
 
 ## How It Works
 
-### 1. Authentication — Server Enforces the Method
+### 1. Authentication: Server Enforces the Method
 
 Each server's `sshd_config` enforces an `AuthenticationMethods` directive based on its host group:
 
@@ -46,9 +46,9 @@ Each server's `sshd_config` enforces an `AuthenticationMethods` directive based 
 | `uat-servers` | `AuthenticationMethods publickey,password` | Key, then password |
 | `prod-servers` | `AuthenticationMethods publickey,keyboard-interactive` | Key, then Password:, then OTP: |
 
-The server decides **how** you authenticate — the user just provides the credentials.
+The server decides **how** you authenticate, the user just provides the credentials.
 
-### 2. Authorization — HBAC Controls Who Can Go Where
+### 2. Authorization: HBAC Controls Who Can Go Where
 
 Once authenticated, HBAC rules in FreeIPA decide if you're **authorized** to access that server.
 
@@ -71,9 +71,9 @@ For example:
 - **mbappe** in `erp-deployment` → can access only dev02, uat02, prd03, prd04
 - **doe** in `monitoring` → can access all prod servers but not dev/uat servers
 
-### 3. Identity — Users, Keys, Groups in FreeIPA
+### 3. Identity: Users, Keys, Groups in FreeIPA
 
-All users, SSH keys, and groups exist only in FreeIPA — never in `/etc/passwd` on clients. SSSD on each client resolves identities from FreeIPA LDAP.
+All users, SSH keys, and groups exist only in FreeIPA, never in `/etc/passwd` on clients. SSSD on each client resolves identities from FreeIPA LDAP.
 
 ## Enrollment Workflow
 

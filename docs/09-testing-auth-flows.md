@@ -12,7 +12,7 @@
 | Wrong OTP | ❌ Not applicable | ❌ Not applicable | ❌ Expected: Denied |
 | HBAC denied | ❌ Expected: Denied (crm user → erp host) | ❌ Expected: Denied (erp user → crm host) | ❌ Expected: Denied (host not in deployment rule) |
 
-## Test 1: DEV — Key-Only Authentication
+## Test 1: DEV: Key-Only Authentication
 
 ```bash
 # Should SUCCEED (key only, no password prompt)
@@ -32,7 +32,7 @@ ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=password \
 # Expected: "Permission denied (publickey)"
 ```
 
-## Test 2: UAT — Key + Password Authentication
+## Test 2: UAT: Key + Password Authentication
 
 ```bash
 # Interactive test
@@ -45,7 +45,7 @@ ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey,password \
 #   3. Enter password → authenticated
 ```
 
-## Test 3: PROD — Key + Password + OTP
+## Test 3: PROD: Key + Password + OTP
 
 ```bash
 # Interactive test
@@ -65,7 +65,7 @@ ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey,password \
 # Should fail because password-only auth is not allowed
 ```
 
-## Test 4: HBAC — Granular Access Control
+## Test 4: HBAC: Granular Access Control
 
 ```bash
 # CRM user (neymar) can access prd01 (in crm-prod-access rule)

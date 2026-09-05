@@ -26,7 +26,7 @@ kinit admin
 ipa host-add prd01.devuatprod.com --ip-address=10.0.0.31
 ```
 
-This is optional — `ipa-client-install` can auto-create the host entry on first enrollment.
+This is optional - `ipa-client-install` can auto-create the host entry on first enrollment.
 
 ### 2. On the Client: Install and Enroll
 

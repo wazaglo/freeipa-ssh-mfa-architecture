@@ -25,7 +25,7 @@ Step 2: PAM via sshd-otp service (separate prompts)
   KDC validates both → Access granted
 ```
 
-**sudo** uses `common-auth` (standard PAM stack without OTP) — only password required.
+**sudo** uses `common-auth` (standard PAM stack without OTP), only password required.
 
 ## 1. Enable OTP Authentication Type for User
 
@@ -86,11 +86,11 @@ Users can add this to their authenticator app by:
 
 ### The Problem
 
-On Debian, both `sshd` and `sudo` include `@include common-auth`. If common-auth has `pam_sss.so forward_pass` first (needed for OTP), then sudo would also prompt for OTP — undesirable.
+On Debian, both `sshd` and `sudo` include `@include common-auth`. If common-auth has `pam_sss.so forward_pass` first (needed for OTP), then sudo would also prompt for OTP, undesirable.
 
 ### The Fix: Dedicated PAM Service for SSH
 
-Create `/etc/pam.d/sshd-otp` — only used for SSH:
+Create `/etc/pam.d/sshd-otp` - only used for SSH:
 
 ```bash
 # /etc/pam.d/sshd-otp

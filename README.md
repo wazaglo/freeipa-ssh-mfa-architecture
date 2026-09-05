@@ -150,14 +150,14 @@ kinit admin
 ansible-playbook -i ansible/inventory/prod.yml ansible/playbooks/enroll-clients.yml
 ```
 
-> **Note:** The `configure-hbac.yml` playbook runs on `hosts: ipa_servers` and executes locally — it does not need remote SSH access at all.
+> **Note:** The `configure-hbac.yml` playbook runs on `hosts: ipa_servers` and executes locally, it does not need remote SSH access at all.
 
 ## CI / Linting
 
 The repository includes GitHub Actions CI that runs on every push and pull request to `main`:
 
-- **ShellCheck** — Lints all bash scripts for syntax errors and common mistakes. Uses inline `--exclude` flags for intentional patterns, reports warnings and above.
-- **Yamllint** — Validates all YAML files (Ansible playbooks, inventory, configs) for syntax and formatting. Configured via `.yamllint` with Ansible-compatible rules (200-char line limit, `yes`/`no` truthy values, 2-space indentation).
+- **ShellCheck**: Lints all bash scripts for syntax errors and common mistakes. Uses inline `--exclude` flags for intentional patterns, reports warnings and above.
+- **Yamllint**: Validates all YAML files (Ansible playbooks, inventory, configs) for syntax and formatting. Configured via `.yamllint` with Ansible-compatible rules (200-char line limit, `yes`/`no` truthy values, 2-space indentation).
 
 ## Documentation
 

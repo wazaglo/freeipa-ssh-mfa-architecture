@@ -1,8 +1,8 @@
-# Phase 7: HBAC Policy — Authorization Layer
+# Phase 7: HBAC Policy: Authorization Layer
 
 ## Overview
 
-Host-Based Access Control (HBAC) rules define **who can access which servers** via SSH. This is the authorization layer — separate from authentication (which is enforced by each server's `sshd_config`).
+Host-Based Access Control (HBAC) rules define **who can access which servers** via SSH. This is the authorization layer, separate from authentication (which is enforced by each server's `sshd_config`).
 
 ## How HBAC Fits the Architecture
 
@@ -15,8 +15,8 @@ Layer 3: AuthN (SSHD)  Server-enforced sshd_config (key / pass / OTP)
 ```
 
 A user must pass **both** layers:
-1. **Authentication** — provide valid credentials (server enforces the method via its host group's sshd_config)
-2. **Authorization** — HBAC allows access to that specific host (via deployment group rule)
+1. **Authentication** - provide valid credentials (server enforces the method via its host group's sshd_config)
+2. **Authorization** - HBAC allows access to that specific host (via deployment group rule)
 
 ## Key Principle
 
@@ -143,7 +143,7 @@ ipa group-add-member crm-deployment --users=neymar
 ipa group-add-member erp-deployment --users=mbappe
 ```
 
-No need to change sshd_config, host groups, or enrollment — the auth method on each server stays the same.
+No need to change sshd_config, host groups, or enrollment, the auth method on each server stays the same.
 
 ## Adding a New Server to an Existing Deployment
 
@@ -157,7 +157,7 @@ ipa hostgroup-add-member prod-servers --hosts=prd06.devuatprod.com
 ipa hbacrule-add-host crm-prod-access --hosts=prd06.devuatprod.com
 ```
 
-Users in `crm-deployment` now automatically get access to `prd06` — no user changes needed.
+Users in `crm-deployment` now automatically get access to `prd06` - no user changes needed.
 
 ## Testing Rules
 
