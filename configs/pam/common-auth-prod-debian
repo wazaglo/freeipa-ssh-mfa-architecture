@@ -1,5 +1,5 @@
 # Debian common-auth for non-SSH services (sudo, login, etc.)
-# This is the STANDARD stack — no OTP order.
+# This is the STANDARD stack - no OTP order.
 # SSH uses its own dedicated PAM service (sshd-otp) with OTP order.
 #
 # Order: pam_unix.so first (standard), pam_sss.so with use_first_pass

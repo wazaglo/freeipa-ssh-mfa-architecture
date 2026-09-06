@@ -1,9 +1,9 @@
 #!/bin/bash
-# Phase 7: HBAC Policy — Deployment Groups → Specific Hosts
+# Phase 7: HBAC Policy - Deployment Groups → Specific Hosts
 # Run this on the IPA server
 set -euo pipefail
 
-echo "[+] Phase 7: HBAC Policy — Deployment Groups to Specific Hosts"
+echo "[+] Phase 7: HBAC Policy - Deployment Groups to Specific Hosts"
 echo ""
 echo "This script creates HBAC rules that map deployment groups"
 echo "to specific individual hosts (not host groups)."
@@ -110,7 +110,7 @@ done
 ipa hbacrule-add-service monitoring-access \
     --services=sshd || true
 
-# --- DevOps All-Access (exception — uses host groups) ---
+# --- DevOps All-Access (exception - uses host groups) ---
 echo ""
 echo "[+] Creating DevOps all-access rule..."
 ipa hbacrule-add devops-all-access \

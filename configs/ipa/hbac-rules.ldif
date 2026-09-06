@@ -86,7 +86,7 @@
 # member_service_cn: sshd
 # -
 
-# --- DevOps All-Access Rule (exception — uses host groups) ---
+# --- DevOps All-Access Rule (exception - uses host groups) ---
 # dn: cn=devops-all-access,cn=hbac,dc=devuatprod,dc=com
 # changetype: add
 # objectclass: ipahbacrule

@@ -124,7 +124,7 @@ ipa hbacrule-add-host monitoring-access --hosts=prd04.devuatprod.com
 ipa hbacrule-add-host monitoring-access --hosts=prd05.devuatprod.com
 ipa hbacrule-add-service monitoring-access --services=sshd
 
-# 3. DevOps all-access rule (uses host groups for blanket access — this is the exception)
+# 3. DevOps all-access rule (uses host groups for blanket access - this is the exception)
 ipa hbacrule-add devops-all-access --desc="DevOps engineers access all environments"
 ipa hbacrule-add-user devops-all-access --groups=devops
 ipa hbacrule-add-host devops-all-access --hostgroups=dev-servers

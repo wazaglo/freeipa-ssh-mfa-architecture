@@ -6,7 +6,7 @@
 
   vars:
     ipa_domain: devuatprod.com
-    # Host groups — Ansible use only, NOT for HBAC
+    # Host groups - Ansible use only, NOT for HBAC
     hosts:
       dev:
         - dev01

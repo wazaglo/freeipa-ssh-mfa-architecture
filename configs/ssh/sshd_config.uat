@@ -1,5 +1,5 @@
 # UAT Environment SSH Configuration
-# Authentication: SSH key + password — no OTP
+# Authentication: SSH key + password - no OTP
 
 
 PubkeyAuthentication yes

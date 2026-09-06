@@ -54,7 +54,7 @@ echo ""
 # ==========================================
 # Test 1: DEV environment (key-only)
 # ==========================================
-echo "=== TEST 1: DEV — Key-Only Authentication ==="
+echo "=== TEST 1: DEV - Key-Only Authentication ==="
 echo "[ ] CRM user -> CRM DEV host"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
     -o PreferredAuthentications=publickey \
@@ -75,8 +75,8 @@ echo ""
 # ==========================================
 # Test 2: UAT environment (key + password)
 # ==========================================
-echo "=== TEST 2: UAT — Key + Password Authentication ==="
-echo "  ⚠️  Manual test required — run:"
+echo "=== TEST 2: UAT - Key + Password Authentication ==="
+echo "  ⚠️  Manual test required - run:"
 echo "  ssh -i $SSH_KEY $CRM_USER@$CRM_UAT_HOST"
 echo "  You will be prompted for password after key verification."
 echo ""
@@ -84,8 +84,8 @@ echo ""
 # ==========================================
 # Test 3: PROD environment (key + password + OTP)
 # ==========================================
-echo "=== TEST 3: PROD — Key + Password + OTP (MFA) ==="
-echo "  ⚠️  Manual test required — run:"
+echo "=== TEST 3: PROD - Key + Password + OTP (MFA) ==="
+echo "  ⚠️  Manual test required - run:"
 echo "  ssh -i $SSH_KEY $CRM_USER@$CRM_PROD_HOST"
 echo "  You will see two separate prompts:"
 echo "    1. Password:  <enter password>"
@@ -93,9 +93,9 @@ echo "    2. OTP:       <enter 6-digit TOTP code>"
 echo ""
 
 # ==========================================
-# Test 4: HBAC — Granular Per-Host Control
+# Test 4: HBAC - Granular Per-Host Control
 # ==========================================
-echo "=== TEST 4: HBAC — Granular Per-Host Access ==="
+echo "=== TEST 4: HBAC - Granular Per-Host Access ==="
 
 echo "[ ] CRM user accessing CRM PROD host (should succeed):"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
@@ -116,7 +116,7 @@ echo ""
 # ==========================================
 # Test 5: ERP User Access
 # ==========================================
-echo "=== TEST 5: ERP User — Environment Access ==="
+echo "=== TEST 5: ERP User - Environment Access ==="
 echo "[ ] ERP user -> ERP DEV host (should succeed)"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
     -o PreferredAuthentications=publickey \
@@ -136,7 +136,7 @@ echo ""
 # ==========================================
 # Test 6: DevOps All-Access
 # ==========================================
-echo "=== TEST 6: DevOps — All-Environment Access ==="
+echo "=== TEST 6: DevOps - All-Environment Access ==="
 echo "[ ] DevOps user -> any server (should succeed)"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
     -o PreferredAuthentications=publickey \

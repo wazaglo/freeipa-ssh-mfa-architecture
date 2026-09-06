@@ -5,7 +5,7 @@
 # pam_sss.so comes FIRST with forward_pass for OTP handling.
 # pam_unix.so with use_first_pass gets the password forwarded.
 #
-# system-auth is used by sudo and other services — kept standard.
+# system-auth is used by sudo and other services - kept standard.
 
 auth        required      pam_env.so
 auth        required      pam_faildelay.so delay=2000000

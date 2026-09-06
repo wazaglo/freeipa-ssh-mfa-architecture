@@ -42,7 +42,7 @@ Each server's `sshd_config` enforces an `AuthenticationMethods` directive based 
 
 | Host Group | `sshd_config` | Auth Flow |
 |---|---|---|
-| `dev-servers` | `AuthenticationMethods publickey` | Key only — no password prompt |
+| `dev-servers` | `AuthenticationMethods publickey` | Key only - no password prompt |
 | `uat-servers` | `AuthenticationMethods publickey,password` | Key, then password |
 | `prod-servers` | `AuthenticationMethods publickey,keyboard-interactive` | Key, then Password:, then OTP: |
 
@@ -102,7 +102,7 @@ All users, SSH keys, and groups exist only in FreeIPA, never in `/etc/passwd` on
    ipa group-add-member crm-deployment --users=neymar
         │
         ▼
-7. Done — neymar SSHs to prd01 and gets key+password+OTP
+7. Done - neymar SSHs to prd01 and gets key+password+OTP
 ```
 
 ## Three-Layer Separation

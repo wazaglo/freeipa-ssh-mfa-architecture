@@ -1,5 +1,5 @@
 # DEV Environment SSH Configuration
-# Authentication: SSH key only — no password, no OTP
+# Authentication: SSH key only - no password, no OTP
 
 
 PubkeyAuthentication yes

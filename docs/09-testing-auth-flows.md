@@ -72,7 +72,7 @@ ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey,password \
 ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey,keyboard-interactive \
     neymar@prd01.devuatprod.com "echo 'CRM PROD access OK'"
 
-# CRM user (neymar) trying prd03 (NOT in crm-prod-access) — should be denied
+# CRM user (neymar) trying prd03 (NOT in crm-prod-access) - should be denied
 ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey \
     -o BatchMode=yes \
     neymar@prd03.devuatprod.com "echo success"
@@ -82,7 +82,7 @@ ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey \
 ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey,keyboard-interactive \
     mbappe@prd03.devuatprod.com "echo 'ERP PROD access OK'"
 
-# ERP user (mbappe) trying prd01 (NOT in erp-all-access) — should be denied
+# ERP user (mbappe) trying prd01 (NOT in erp-all-access) - should be denied
 ssh -i ~/.ssh/id_ed25519 -o PreferredAuthentications=publickey \
     -o BatchMode=yes \
     mbappe@prd01.devuatprod.com "echo success"

@@ -11,7 +11,7 @@ echo "[ ] Using Deployment Groups (not env-based user groups)"
 kinit admin
 
 # ==========================================
-# Create Host Groups (Ansible use only — NOT for HBAC)
+# Create Host Groups (Ansible use only - NOT for HBAC)
 # ==========================================
 echo ""
 echo "=== Creating Host Groups (Ansible sshd_config targeting only) ==="

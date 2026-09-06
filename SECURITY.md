@@ -50,7 +50,7 @@ The following security issues remain in the current codebase. They are documente
 | **HIGH** | Ansible reads password from plaintext file without `no_log: true` | `ansible/playbooks/enroll-clients.yml:9` |
 | **HIGH** | `StrictHostKeyChecking=accept-new` enables MITM on first connection | `scripts/phase-9-test-auth.sh` |
 | **MEDIUM** | Passwords set to never expire (2030) | `scripts/phase-5-create-users.sh:101` |
-| **MEDIUM** | No Ansible Vault usage — all secrets in plaintext | All Ansible files |
+| **MEDIUM** | No Ansible Vault usage - all secrets in plaintext | All Ansible files |
 | **MEDIUM** | LDIF example uses unencrypted LDAP (port 389) | `configs/ipa/hbac-rules.ldif:14` |
 | **MEDIUM** | No FreeIPA password policy configured | Repository-wide |
 

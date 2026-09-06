@@ -15,12 +15,12 @@ Centralized authentication system using FreeIPA to manage SSH access across DEV 
 **Authorization is determined by deployment group membership mapped to specific hosts.**
 
 ```
-Host Groups (Ansible only — apply correct sshd_config):
+Host Groups (Ansible only - apply correct sshd_config):
   dev-servers    →  publickey (key only)
   uat-servers    →  publickey,password (key + pass)
   prod-servers   →  publickey,keyboard-interactive (key+pass+OTP)
 
-Authorization (HBAC — deployment groups → specific hosts):
+Authorization (HBAC - deployment groups → specific hosts):
   crm-deployment →  dev01, uat01, prd01, prd02  (per-host explicit)
   erp-deployment →  dev02, uat02, prd03, prd04  (per-host explicit)
   devops         →  ALL servers                  (override)
@@ -91,7 +91,7 @@ This starts an IPA server + 3 clients (DEV/UAT/PROD), enrolls them, creates test
 # 4. Upload SSH keys (Phase 6)
 ./scripts/phase-6-ssh-key-setup.sh
 
-# 5. Configure HBAC rules — deployment groups → specific hosts (Phase 7)
+# 5. Configure HBAC rules - deployment groups → specific hosts (Phase 7)
 ./scripts/phase-7-hbac-rules.sh
 
 # 6. Configure OTP for production (Phase 8)

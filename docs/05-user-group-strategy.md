@@ -42,7 +42,7 @@ ipa hostgroup-add dev-servers --desc="DEV environment servers"
 ipa hostgroup-add uat-servers --desc="UAT environment servers"
 ipa hostgroup-add prod-servers --desc="PRODUCTION environment servers"
 
-# Add hosts after enrollment — Ansible uses host groups to apply sshd_config
+# Add hosts after enrollment - Ansible uses host groups to apply sshd_config
 ipa hostgroup-add-member dev-servers --hosts=dev01.devuatprod.com
 ipa hostgroup-add-member uat-servers --hosts=uat01.devuatprod.com
 ipa hostgroup-add-member prod-servers --hosts=prd01.devuatprod.com
@@ -158,7 +158,7 @@ User: john (Senior Engineer)
 
   john → prd01 → auth: key + password + OTP (enforced by server via prod-servers host group)
   john → prd02 → auth: key + password + OTP (enforced by server via prod-servers host group)
-  john → prd03 → DENIED (no HBAC rule grants access — prd03 is not in the rule)
+  john → prd03 → DENIED (no HBAC rule grants access - prd03 is not in the rule)
 ```
 
 ## Adding a New Server to an Existing Deployment

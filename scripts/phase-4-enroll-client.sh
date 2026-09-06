@@ -6,9 +6,9 @@ set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
     echo "Usage: $0 <dev|uat|prod> [ipa_server_ip]"
-    echo "  dev  — DEV environment (key-only auth)"
-    echo "  uat  — UAT environment (key+password auth)"
-    echo "  prod — PRODUCTION environment (key+password+OTP auth)"
+    echo "  dev  - DEV environment (key-only auth)"
+    echo "  uat  - UAT environment (key+password auth)"
+    echo "  prod - PRODUCTION environment (key+password+OTP auth)"
     exit 1
 fi
 
@@ -56,7 +56,7 @@ systemctl restart sshd
 
 # Test IPA connectivity
 echo "[+] Testing connectivity..."
-ipa user-find admin 2>/dev/null || echo "[!] ipa command failed — check sssd logs"
+ipa user-find admin 2>/dev/null || echo "[!] ipa command failed - check sssd logs"
 
 # Check SSSD status
 sssctl domain-status "$IPA_DOMAIN"

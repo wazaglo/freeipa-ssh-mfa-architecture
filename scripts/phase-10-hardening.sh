@@ -8,7 +8,7 @@ IPA_DOMAIN="devuatprod.com"
 echo "[+] Phase 10: Hardening and Security Configuration"
 
 # ==========================================
-# 1. SELinux (RHEL/CentOS only — skip on Debian)
+# 1. SELinux (RHEL/CentOS only - skip on Debian)
 # ==========================================
 echo ""
 echo "=== 1. SELinux ==="
